@@ -12,6 +12,10 @@
 *.la
 *.a
 
+# misc windows stuff
+*.exp
+*.lib
+
 tmp/
 
 3rdparty/linux
