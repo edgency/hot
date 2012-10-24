@@ -48,6 +48,9 @@
 #include <GU/GU_PrimPart.h>
 #include <GA/GA_AttributeRef.h>
 
+#include <omp.h>
+
+
 // --------------------------------- SOP paramaters --------------------------------------------
 
 // simulation grid resolution, we want it to be power of two only 16 - 2048 allowed
@@ -296,11 +299,22 @@ SOP_Ocean::cookMySop(OP_Context &context)
     }
 
     // this is not that fast, can it be done quicker ???
+
+//#define GA_FOR_ALL_GPOINTS(gdp, point)  \
+//        for (GA_GBPointIterator it(*(gdp)); \
+//                (point = GA_Detail::GB_MACRO_CAST(gdp, it.getPoint())); ++it)
+
+    { // begin hackery
+
+//    #pragma omp parallel for
+//    GA_GBPointIterator gb_it(*(gdp));
+//    GEO_Point        *ppt;
+//    for( ;  ppt = GA_Detail::GB_MACRO_CAST(gdp, gb_it.getPoint()) ; ++gb_it  )
+
     GA_FOR_ALL_GPOINTS(gdp, ppt)
     {
       UT_Vector4 p = ppt->getPos();
 
-                
       if (linterp)
       {
         _ocean_context->eval_xz(p(0),p(2));
@@ -349,6 +363,8 @@ SOP_Ocean::cookMySop(OP_Context &context)
       }
       ppt->setPos(p);
     }
+
+    } // end hackery
 
 
     gdp->notifyCache(GU_CACHE_ALL);
