@@ -101,6 +101,9 @@ private:
 
     int     JACOBIAN(float t)     { return evalInt(15,0,t); }
 
+    float   GLOBAL_SCALE(float t)   { return evalFloat(16,0,t); }
+
+    float   ENVELOPE(float t)   { return evalFloat(17,0,t); }
 };
 
 #endif // __drw_sop_h
