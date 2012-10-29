@@ -212,7 +212,8 @@ SOP_Ocean::disableParms()
 {
   unsigned changes = SOP_Node::disableParms();
 
-  changes += enableParm("normals_toggle",CHOP(0) ? 0 : 1);
+  changes += enableParm("normals_toggle",CHOP(0) ? 0 : 1); // no normals if choppiness enabled
+  changes += enableParm("chop",CHOP(0) ? 1 : 0); // no choppiness amount if chop disabled
 
   return changes;
 }
