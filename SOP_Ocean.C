@@ -127,6 +127,16 @@ static PRM_Default     normalsToggleDefault = PRM_Default(0);
 static PRM_Name       jacobianToggleName("jacobian_toggle","Jacobian");
 static PRM_Default     jacobianToggleDefault = PRM_Default(0); 
 
+// global scale
+static PRM_Range       globalscaleRange(PRM_RANGE_RESTRICTED,0.0001,PRM_RANGE_FREE);  
+static PRM_Name        globalscaleName("gsc","Global Scale");
+static PRM_Default     globalscaleDefault = PRM_Default(1.0);
+
+// envelope (based on maya deformer)
+static PRM_Range       envelopeRange(PRM_RANGE_RESTRICTED,0,PRM_RANGE_FREE);  
+static PRM_Name        envelopeName("env","Envelope");
+static PRM_Default     envelopeDefault = PRM_Default(1.0);
+
 PRM_Template
 SOP_Ocean::myTemplateList[] = 
 {
@@ -162,6 +172,10 @@ SOP_Ocean::myTemplateList[] =
 
   PRM_Template(PRM_TOGGLE,1,&jacobianToggleName, &jacobianToggleDefault,0,0,oceanChanged), 
 
+  PRM_Template(PRM_FLT,1,&globalscaleName, &globalscaleDefault, 0, &globalscaleRange, oceanChanged), 
+  
+  PRM_Template(PRM_FLT,1,&envelopeName, &envelopeDefault, 0, &envelopeRange, oceanChanged), 
+  
   PRM_Template()
 };
 
@@ -198,7 +212,8 @@ SOP_Ocean::disableParms()
 {
   unsigned changes = SOP_Node::disableParms();
 
-  changes += enableParm("normals_toggle",CHOP(0) ? 0 : 1);
+  changes += enableParm("normals_toggle",CHOP(0) ? 0 : 1); // no normals if choppiness enabled
+  changes += enableParm("chop",CHOP(0) ? 1 : 0); // no choppiness amount if chop disabled
 
   return changes;
 }
@@ -240,6 +255,12 @@ SOP_Ocean::cookMySop(OP_Context &context)
 
     int   gridres  = 1 << int(GRID_RES(now));
     float stepsize = GRID_SIZE(now) / (float)gridres;
+
+    float env = ENVELOPE(now),
+            g_scale = GLOBAL_SCALE(now),
+            g_scale1 = 1.0/g_scale;
+
+    float env_gscale = env * g_scale; // should be g_scale * deformation amount
 
     bool do_chop     = CHOP(now);
     bool do_jacobian = JACOBIAN(now);
@@ -317,18 +338,18 @@ SOP_Ocean::cookMySop(OP_Context &context)
 
       if (linterp)
       {
-        _ocean_context->eval_xz(p(0),p(2));
+        _ocean_context->eval_xz(g_scale1*p(0), g_scale1*p(2));
       }
       else
       {
-        _ocean_context->eval2_xz(p(0),p(2));
+        _ocean_context->eval2_xz(g_scale1*p(0), g_scale1*p(2));
       }
 
       if (do_chop) 
       {
-        p.assign( p(0) + _ocean_context->disp[0],
-                  p(1) + _ocean_context->disp[1],
-                  p(2) + _ocean_context->disp[2] );
+        p.assign( p(0) + _ocean_context->disp[0]*env_gscale,
+                  p(1) + _ocean_context->disp[1]*env_gscale,
+                  p(2) + _ocean_context->disp[2]*env_gscale );
       }
       else
       {
