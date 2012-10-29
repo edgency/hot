@@ -295,7 +295,7 @@ SOP_Ocean::cookMySop(OP_Context &context)
       // jminus_index = gdp->addPointAttrib("mineigval",sizeof(float),GB_ATTRIB_FLOAT,0);
       // eminus_index = gdp->addPointAttrib("mineigvec",sizeof(UT_Vector3),GB_ATTRIB_VECTOR,0);
       jminus_index = gdp->addTuple(GA_STORE_REAL32,GA_ATTRIB_POINT,"mineigval",1,GA_Defaults(0));
-      eminus_index = gdp->addFloatTuple(GA_ATTRIB_POINT,"mineigvec",1,GA_Defaults(0));
+      eminus_index = gdp->addFloatTuple(GA_ATTRIB_POINT,"mineigvec",3,GA_Defaults(0));
     }
 
     // this is not that fast, can it be done quicker ???
@@ -359,7 +359,12 @@ SOP_Ocean::cookMySop(OP_Context &context)
          eminus->assign(_ocean_context->Eminus[0],0,_ocean_context->Eminus[1]);
        */
         ppt->setValue<float>(jminus_index,_ocean_context->Jminus);
-        ppt->getValue<UT_Vector3>(eminus_index).assign(_ocean_context->Eminus[0],0,_ocean_context->Eminus[1]);
+        ppt->setValue<UT_Vector3>(eminus_index,
+		UT_Vector3(
+			_ocean_context->Eminus[0],
+			_ocean_context->Eminus[1],
+			_ocean_context->Eminus[2])
+		);
       }
       ppt->setPos(p);
     }
